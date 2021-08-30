@@ -176,6 +176,7 @@ module LogStash module Inputs class Jdbc < LogStash::Inputs::Base
   # There is no schedule by default. If no schedule is given, then the statement is run
   # exactly once.
   config :schedule, :validate => :string
+  config :schedule_every, :validate => :string
 
   # Path to file with last run time
   config :last_run_metadata_path, :validate => :string, :default => "#{ENV['HOME']}/.logstash_jdbc_last_run"
@@ -299,6 +300,10 @@ module LogStash module Inputs class Jdbc < LogStash::Inputs::Base
       end
 
       @scheduler.join
+    elsif @schedule_every
+      @scheduler = Rufus::Scheduler.new(:max_work_threads => 1)
+      @scheduler.every @schedule_every do
+        execute_query(queue)
     else
       execute_query(queue)
     end
